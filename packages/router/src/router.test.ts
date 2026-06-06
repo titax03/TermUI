@@ -91,12 +91,14 @@ describe('Router', () => {
         const lazy = () => Promise.resolve({
             default: () => 'LazyScreen',
         });
+
         r.addRoutes([
             {
                 path: '/lazy',
                 component: () => 'Placeholder',
             },
         ]);
+
         expect(r.routes[0]?.component).toBeDefined();
     });
 
@@ -132,5 +134,34 @@ describe('Router', () => {
         r.back();
         expect(r.currentPath).toBe('/');
         expect(r.historyLength).toBe(1);
+    });
+
+    it('beforeEnter can block navigation', () => {
+        const r = new Router();
+        r.addRoute('/admin', () => 'Admin', undefined, { beforeEnter: () => false });
+        
+        r.push('/admin');
+        
+        expect(r.current).toBeNull();
+    });
+
+    it('beforeEnter can redirect navigation', () => {
+        const r = new Router();
+        r.addRoute('/login', () => 'Login');
+        r.addRoute('/admin', () => 'Admin', undefined, { beforeEnter: () => '/login' });
+        
+        r.push('/admin');
+        
+        expect(r.currentPath).toBe('/login');
+    });
+
+    it('afterEnter executes after navigation', () => {
+        const r = new Router();
+        const spy = vi.fn();
+        r.addRoute('/home', () => 'Home', undefined, { afterEnter: spy });
+        
+        r.push('/home');
+        
+        expect(spy).toHaveBeenCalled();
     });
 });
